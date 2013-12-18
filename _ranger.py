@@ -135,7 +135,7 @@ class Strategy(strategy.Strategy):
         return self.gox.base2int(1.0 * self.gox.wallet[self.gox.curr_quote] / idx / price)
 
     def place_all_orders(self):
-        """ set initial orders at all levels; currently limited to 5 (GOX timelimit) """
+        """ set initial orders at all levels; currently limited to 6 (GOX timelimit) """
         cur_lvl = self.closest_level()
         if cur_lvl == -1:
             return
