@@ -11,8 +11,8 @@ from datetime import datetime
 import strategy
 import time
  
-RANGE_MIN  = 350     # minimum possible price - at this price, we would be all BTC
-RANGE_MAX  = 1350    # maximum possible price - at this price, we would be all FIAT
+RANGE_MIN  = 50     # minimum possible price - at this price, we would be all BTC
+RANGE_MAX  = 1250    # maximum possible price - at this price, we would be all FIAT
 PERCENT_STEP = 2.37  # each level is this much % above the next; add a prime to not avoid walls
  
 MARKER      = 9      # lowest digit of price to identify bot's own orders
