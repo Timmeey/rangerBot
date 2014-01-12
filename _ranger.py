@@ -10,10 +10,13 @@ goxtool is property of prof7bit
 from datetime import datetime
 import strategy
 import time
+
+FIAT_COLD = 0       # FIAT which will always be left in the account 
+BTC_COLD = 0.4      # BTC which will always be left in the account
  
-RANGE_MIN  = 50     # minimum possible price - at this price, we would be all BTC
-RANGE_MAX  = 1250    # maximum possible price - at this price, we would be all FIAT
-PERCENT_STEP = 2.37  # each level is this much % above the next; add a prime to not hit walls
+RANGE_MIN  = 900     # minimum possible price - at this price, we would be all BTC
+RANGE_MAX  = 1100 # maximum possible price - at this price, we would be all FIAT
+PERCENT_STEP = 2  # each level is this much % above the next; add a prime to not hit walls
  
 MARKER      = 9      # lowest digit of price to identify bot's own orders
 COIN        = 1E8    # number of satoshi per coin, this is a constant.
@@ -93,11 +96,27 @@ class Strategy(strategy.Strategy):
     @property
     def total_fiat_now(self):
        """ total fiat at curr market price """
-       fiat = self.gox.quote2float(self.gox.wallet[self.gox.curr_quote])
-       btc = self.gox.base2float(self.gox.wallet[self.gox.curr_base])
+       fiat = self.gox.quote2float(self.fiat_now) 
+       btc = self.gox.base2float(self.btc_now)
        price = self.gox.quote2float(self.price_now)
 
-       return fiat + btc * price
+       return (fiat -FIAT_COLD) + (btc - BTC_COLD) * price
+
+    @property
+    def fiat_now(self):
+       tmp_fiat = self.gox.wallet[self.gox.curr_quote]-(FIAT_COLD*1E5)
+       if tmp_fiat >0:
+           return tmp_fiat
+       else:
+           return 0
+
+    @property
+    def btc_now(self):
+       tmp_btc = self.gox.wallet[self.gox.curr_base] - BTC_COLD*COIN
+       if tmp_btc > 0:
+           return tmp_btc
+       else:
+           return 0
 
     @property
     def levels(self):
@@ -120,19 +139,21 @@ class Strategy(strategy.Strategy):
         return min(range(len(lvl)), key=lambda i: abs(lvl[i]-price))
 
     def sell_amount(self, price):
+        #self.debug("muh macht die kuh hier mit btc_now %s und fiat_now %s" %(self.btc_now,self.fiat_now))
         """ how much to sell, in gox btc - our btc divided by number of steps left"""
         idx = self.closest_level()
         ratio = sum([1.0 * price / x for x in self.levels[idx+1:]])
         if ratio == 0:
             return -1
-        return int(self.gox.wallet[self.gox.curr_base] / ratio)
+        return int(self.btc_now / ratio)
 
     def buy_amount(self, price):
         """ how much to buy, in gox btc - our fiat divided by number of steps left"""
         idx = self.closest_level()
         if idx < 1:
             return -1
-        return self.gox.base2int(1.0 * self.gox.wallet[self.gox.curr_quote] / idx / price)
+	#self.debug(self.fiat_now)
+        return self.gox.base2int(1.0 * (self.fiat_now) / idx / price)
 
     def place_all_orders(self):
         """ set initial orders at all levels; currently limited to 6 (GOX timelimit) """
@@ -182,7 +203,7 @@ class Strategy(strategy.Strategy):
         if is_sale:
             amount = self.sell_amount(price)
             if amount < 0.01 * COIN:
-                self.debug("*** ERR not enough BTC to sell! Halting trading")
+                self.debug("*** ERR not enough BTC to sell(%s)! Halting trading" %(self.gox.base2float(amount)))
                 self.temp_halt = True
                 return False
             op = "ask"
@@ -190,7 +211,7 @@ class Strategy(strategy.Strategy):
         else:
             amount = self.buy_amount(price)
             if amount < 0.01 * COIN:
-                self.debug("*** ERR not enough fiat to buy! Halting trading")
+                self.debug("*** ERR not enough fiat to buy(%s)! Halting trading" %(self.gox.base2float(amount)))
                 self.temp_halt = True
                 return False
             op = "bid"
@@ -225,7 +246,8 @@ class Strategy(strategy.Strategy):
             return True
         price = self.levels[level]
         for order in self.gox.orderbook.owns:
-            if order.price == price and order.volume > 0.00000001 * COIN: 
+	    #self.debug("volume %s" %(order.volume))
+            if order.price == price and order.volume > 0.00000001 * COIN:
                 return True
         # No Matches
         return False
