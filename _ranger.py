@@ -225,7 +225,7 @@ class Strategy(strategy.Strategy):
             return True
         price = self.levels[level]
         for order in self.gox.orderbook.owns:
-            if order.price == price:
+            if order.price == price and order.volume > 0.00000001 * COIN: 
                 return True
         # No Matches
         return False
