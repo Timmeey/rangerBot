@@ -14,6 +14,7 @@ You set a trading range e.g. 500 to 1200 and a step width of 5 %. Now the bot de
 At the start it will set 6 orders (every step_width(5%)) around the current price.
 
 My changes so far are:
-	1. Order fillment status check. If a order is filled besides 0.00000001BTC, the bot will take it as fully filled. This helps against a weird habbit of mtGox to sometimes leave 0.00000001 BTC of an order. So the bot will not wait until these micro orders are filled.
 
-	2. Added the ability to set cold BTC/FIAT storage wich will not be touched by the bot. So if you set BTC_COLD to 0.5, the bot will allways leave 0.5 BTC in your account. Same goes for FIAT_COLD. So you can let the bot run without you full protfolio value.
+1. Order fillment status check. If a order is filled besides 0.00000001BTC, the bot will take it as fully filled. This helps against a weird habbit of mtGox to sometimes leave 0.00000001 BTC of an order. So the bot will not wait until these micro orders are filled.
+
+2. Added the ability to set cold BTC/FIAT storage wich will not be touched by the bot. So if you set BTC_COLD to 0.5, the bot will allways leave 0.5 BTC in your account. Same goes for FIAT_COLD. So you can let the bot run without you full protfolio value.
